@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DentalHeader } from "@/components/DentalHeader";
 import { PatientForm } from "@/components/PatientForm";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -6,7 +7,7 @@ import { ColorSelector } from "@/components/ColorSelector";
 import { InteractiveCanvas } from "@/components/InteractiveCanvas";
 import { TreatmentSummary } from "@/components/TreatmentSummary";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Settings } from "lucide-react";
 
 interface PatientData {
   name: string;
@@ -24,6 +25,7 @@ interface Treatment {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -76,8 +78,8 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <DentalHeader />
         
-        {/* Progress indicator */}
-        <div className="flex justify-center mb-8">
+        {/* Progress indicator and settings button */}
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
@@ -100,6 +102,16 @@ const Index = () => {
               </div>
             ))}
           </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/treatments")}
+            className="text-dental-pink border-dental-pink/20 hover:bg-dental-pink/10"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Gestionar Tratamientos
+          </Button>
         </div>
 
         <div className="space-y-8">

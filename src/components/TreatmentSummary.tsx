@@ -25,15 +25,13 @@ interface TreatmentSummaryProps {
   images?: string[];
 }
 
-const TREATMENT_COSTS = {
-  "Pulpotomías": 1200.00,
-  "Coronas metálicas": 1600.00,
-  "Extracciones": 600.00,
-  "Resinas en diente temporal": 1000.00,
-  "Resina en diente permanente": 1200.00
-};
+import { useTreatments } from "@/hooks/useTreatments";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const TreatmentSummary = ({ treatments, patientData, images = [] }: TreatmentSummaryProps) => {
+  const { user } = useAuth();
+  const { getTreatmentCost } = useTreatments(user?.companyId || undefined);
+  
   // Group treatments by type and count them
   const treatmentCounts = treatments.reduce((acc, treatment) => {
     acc[treatment.name] = (acc[treatment.name] || 0) + 1;
@@ -41,12 +39,15 @@ export const TreatmentSummary = ({ treatments, patientData, images = [] }: Treat
   }, {} as Record<string, number>);
 
   // Calculate totals
-  const treatmentTotals = Object.entries(treatmentCounts).map(([name, count]) => ({
-    name,
-    count,
-    unitCost: TREATMENT_COSTS[name as keyof typeof TREATMENT_COSTS] || 0,
-    total: count * (TREATMENT_COSTS[name as keyof typeof TREATMENT_COSTS] || 0)
-  }));
+  const treatmentTotals = Object.entries(treatmentCounts).map(([name, count]) => {
+    const unitCost = getTreatmentCost(name);
+    return {
+      name,
+      count,
+      unitCost,
+      total: count * unitCost
+    };
+  });
 
   const grandTotal = treatmentTotals.reduce((sum, item) => sum + item.total, 0);
 
