@@ -24,9 +24,9 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { 
-  Badge
-} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { ImageUploader } from "@/components/ImageUploader";
 import { 
   Plus, 
   ArrowLeft,
@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Company, CompanyFormData } from "@/types/company";
+import { Company } from "@/types/company";
 import { 
   getCompanies, 
   createCompany, 
@@ -63,6 +63,12 @@ const companySchema = z.object({
   licenses: z.array(z.string()).optional(),
   additionalTraining: z.array(z.string()).optional(),
   recommendations: z.array(z.string()).optional(),
+  // Campos específicos para información del doctor
+  doctorName: z.string().optional(),
+  doctorSpecialty: z.string().optional(),
+  doctorCertifications: z.array(z.string()).optional(),
+  doctorInitials: z.string().optional(),
+  importantObservations: z.string().optional(),
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
@@ -75,6 +81,16 @@ const CompaniesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [tempCertifications, setTempCertifications] = useState<string[]>([]);
+  const [tempLicenses, setTempLicenses] = useState<string[]>([]);
+  const [tempAdditionalTraining, setTempAdditionalTraining] = useState<string[]>([]);
+  const [tempRecommendations, setTempRecommendations] = useState<string[]>([]);
+  const [tempDoctorCertifications, setTempDoctorCertifications] = useState<string[]>([]);
+  const [newCertification, setNewCertification] = useState("");
+  const [newLicense, setNewLicense] = useState("");
+  const [newTraining, setNewTraining] = useState("");
+  const [newRecommendation, setNewRecommendation] = useState("");
+  const [newDoctorCertification, setNewDoctorCertification] = useState("");
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
@@ -92,6 +108,11 @@ const CompaniesManagement = () => {
       licenses: [],
       additionalTraining: [],
       recommendations: [],
+      doctorName: "",
+      doctorSpecialty: "",
+      doctorCertifications: [],
+      doctorInitials: "",
+      importantObservations: "",
     },
   });
 
@@ -140,14 +161,24 @@ const CompaniesManagement = () => {
 
   const onSubmit = async (data: CompanyFormData) => {
     try {
+      const companyData = {
+        ...data,
+        name: data.name, // Asegurar que name esté presente
+        certifications: tempCertifications,
+        licenses: tempLicenses,
+        additionalTraining: tempAdditionalTraining,
+        recommendations: tempRecommendations,
+        doctorCertifications: tempDoctorCertifications,
+      };
+
       if (editingCompany) {
-        await updateCompany(editingCompany.id, data);
+        await updateCompany(editingCompany.id, companyData);
         toast({
           title: "Empresa actualizada",
           description: `${data.name} ha sido actualizada exitosamente.`,
         });
       } else {
-        await createCompany(data);
+        await createCompany(companyData);
         toast({
           title: "Empresa creada",
           description: `${data.name} ha sido creada exitosamente.`,
@@ -161,6 +192,7 @@ const CompaniesManagement = () => {
       setIsFormOpen(false);
       setEditingCompany(null);
       form.reset();
+      resetTempArrays();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -182,11 +214,16 @@ const CompaniesManagement = () => {
       website: company.website || "",
       ownerName: company.ownerName || "",
       specialty: company.specialty || "",
-      certifications: company.certifications || [],
-      licenses: company.licenses || [],
-      additionalTraining: company.additionalTraining || [],
-      recommendations: company.recommendations || [],
+      doctorName: company.doctorName || "",
+      doctorSpecialty: company.doctorSpecialty || "",
+      doctorInitials: company.doctorInitials || "",
+      importantObservations: company.importantObservations || "",
     });
+    setTempCertifications(company.certifications || []);
+    setTempLicenses(company.licenses || []);
+    setTempAdditionalTraining(company.additionalTraining || []);
+    setTempRecommendations(company.recommendations || []);
+    setTempDoctorCertifications(company.doctorCertifications || []);
     setIsFormOpen(true);
   };
 
@@ -232,6 +269,69 @@ const CompaniesManagement = () => {
 
   const handleViewTreatments = (companyId: string) => {
     navigate(`/treatments?companyId=${companyId}`);
+  };
+
+  const resetTempArrays = () => {
+    setTempCertifications([]);
+    setTempLicenses([]);
+    setTempAdditionalTraining([]);
+    setTempRecommendations([]);
+    setTempDoctorCertifications([]);
+  };
+
+  const addCertification = () => {
+    if (newCertification.trim()) {
+      setTempCertifications([...tempCertifications, newCertification.trim()]);
+      setNewCertification("");
+    }
+  };
+
+  const removeCertification = (index: number) => {
+    setTempCertifications(tempCertifications.filter((_, i) => i !== index));
+  };
+
+  const addLicense = () => {
+    if (newLicense.trim()) {
+      setTempLicenses([...tempLicenses, newLicense.trim()]);
+      setNewLicense("");
+    }
+  };
+
+  const removeLicense = (index: number) => {
+    setTempLicenses(tempLicenses.filter((_, i) => i !== index));
+  };
+
+  const addTraining = () => {
+    if (newTraining.trim()) {
+      setTempAdditionalTraining([...tempAdditionalTraining, newTraining.trim()]);
+      setNewTraining("");
+    }
+  };
+
+  const removeTraining = (index: number) => {
+    setTempAdditionalTraining(tempAdditionalTraining.filter((_, i) => i !== index));
+  };
+
+  const addRecommendation = () => {
+    if (newRecommendation.trim()) {
+      setTempRecommendations([...tempRecommendations, newRecommendation.trim()]);
+      setNewRecommendation("");
+    }
+  };
+
+  const removeRecommendation = (index: number) => {
+    setTempRecommendations(tempRecommendations.filter((_, i) => i !== index));
+  };
+
+  const addDoctorCertification = () => {
+    if (newDoctorCertification.trim()) {
+      setTempDoctorCertifications([...tempDoctorCertifications, newDoctorCertification.trim()]);
+      setNewDoctorCertification("");
+    }
+  };
+
+  const removeDoctorCertification = (index: number) => {
+    setTempDoctorCertifications(tempDoctorCertifications.filter((_, i) => i !== index));
   };
 
   return (
@@ -292,22 +392,41 @@ const CompaniesManagement = () => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="ownerName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre de la titular</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Dr. Yomaira García Flores"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                                     <FormField
+                     control={form.control}
+                     name="ownerName"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Nombre de la titular</FormLabel>
+                         <FormControl>
+                           <Input
+                             {...field}
+                             placeholder="Dr. Yomaira García Flores"
+                           />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+
+                   <FormField
+                     control={form.control}
+                     name="logo"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormControl>
+                           <ImageUploader
+                             value={field.value}
+                             onChange={field.onChange}
+                             label="Logotipo de la empresa"
+                             placeholder="Arrastra o haz clic para subir el logotipo"
+                             maxSize={2}
+                           />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
 
                   <FormField
                     control={form.control}
@@ -396,7 +515,7 @@ const CompaniesManagement = () => {
                     )}
                   />
 
-                                     {/* Campos adicionales para información profesional */}
+                   {/* Campos adicionales para información profesional */}
                    <div className="border-t pt-6">
                      <h3 className="text-lg font-semibold mb-4 text-gray-800">Información Profesional</h3>
                     
@@ -510,6 +629,97 @@ const CompaniesManagement = () => {
                      />
                    </div>
 
+                   {/* Campos específicos para información del doctor */}
+                   <div className="border-t pt-6">
+                     <h3 className="text-lg font-semibold mb-4 text-gray-800">Información del Doctor (PDF)</h3>
+                     <FormField
+                       control={form.control}
+                       name="doctorName"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Nombre del Doctor</FormLabel>
+                           <FormControl>
+                             <Input
+                               {...field}
+                               placeholder="Nombre completo del doctor"
+                             />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={form.control}
+                       name="doctorSpecialty"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Especialidad</FormLabel>
+                           <FormControl>
+                             <Input
+                               {...field}
+                               placeholder="Especialidad del doctor"
+                             />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={form.control}
+                       name="doctorInitials"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Iniciales</FormLabel>
+                           <FormControl>
+                             <Input
+                               {...field}
+                               placeholder="Iniciales"
+                             />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={form.control}
+                       name="importantObservations"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Observaciones Importantes</FormLabel>
+                           <FormControl>
+                             <Textarea
+                               {...field}
+                               placeholder="Observaciones importantes que aparecerán en el PDF"
+                               rows={3}
+                             />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                     <div className="mt-4">
+                       <Label>Certificaciones del Doctor</Label>
+                       <div className="flex gap-2 mt-2">
+                         <Input
+                           value={newDoctorCertification}
+                           onChange={(e) => setNewDoctorCertification(e.target.value)}
+                           placeholder="Nueva certificación"
+                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDoctorCertification())}
+                         />
+                         <Button type="button" onClick={addDoctorCertification} variant="outline">
+                           <Plus className="w-4 h-4" />
+                         </Button>
+                       </div>
+                       <div className="flex flex-wrap gap-2 mt-2">
+                         {tempDoctorCertifications.map((cert, index) => (
+                           <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeDoctorCertification(index)}>
+                             {cert} ×
+                           </Badge>
+                         ))}
+                       </div>
+                     </div>
+                   </div>
+
                    {/* Indicador de scroll */}
                    <div className="text-center py-2">
                      <div className="w-8 h-1 bg-gray-300 rounded-full mx-auto"></div>
@@ -523,6 +733,7 @@ const CompaniesManagement = () => {
                          setIsFormOpen(false);
                          setEditingCompany(null);
                          form.reset();
+                         resetTempArrays();
                        }}
                      >
                        Cancelar
@@ -621,17 +832,30 @@ const CompaniesManagement = () => {
                 <TableBody>
                   {companies.map((company) => (
                     <TableRow key={company.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{company.name}</div>
-                          {company.ownerName && (
-                            <p className="text-sm text-blue-600 font-medium">Titular: {company.ownerName}</p>
-                          )}
-                          {company.description && (
-                            <p className="text-sm text-gray-500">{company.description}</p>
-                          )}
-                        </div>
-                      </TableCell>
+                                             <TableCell>
+                         <div className="flex items-center gap-3">
+                           {company.logo ? (
+                             <img
+                               src={company.logo}
+                               alt={`Logo de ${company.name}`}
+                               className="w-12 h-12 object-contain rounded-lg border border-gray-200"
+                             />
+                           ) : (
+                             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                               <Building2 className="w-6 h-6 text-gray-400" />
+                             </div>
+                           )}
+                           <div>
+                             <div className="font-medium">{company.name}</div>
+                             {company.ownerName && (
+                               <p className="text-sm text-blue-600 font-medium">Titular: {company.ownerName}</p>
+                             )}
+                             {company.description && (
+                               <p className="text-sm text-gray-500">{company.description}</p>
+                             )}
+                           </div>
+                         </div>
+                       </TableCell>
                                              <TableCell>
                          <div className="text-sm space-y-1">
                            {company.specialty && (

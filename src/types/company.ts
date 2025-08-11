@@ -14,6 +14,12 @@ export interface Company {
   licenses?: string[];
   additionalTraining?: string[];
   recommendations?: string[]; // Recomendaciones
+  // Campos específicos para información del doctor en el PDF
+  doctorName?: string;
+  doctorSpecialty?: string;
+  doctorCertifications?: string[];
+  doctorInitials?: string;
+  importantObservations?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +40,12 @@ export interface CompanyFormData {
   licenses?: string[];
   additionalTraining?: string[];
   recommendations?: string[]; // Recomendaciones
+  // Campos específicos para información del doctor en el PDF
+  doctorName?: string;
+  doctorSpecialty?: string;
+  doctorCertifications?: string[];
+  doctorInitials?: string;
+  importantObservations?: string;
 }
 
 export interface CompanyFilters {

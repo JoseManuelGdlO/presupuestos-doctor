@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Eye, EyeOff, Lock, Stethoscope, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -54,14 +54,18 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo y título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-dental-pink rounded-full mb-4">
-            <Stethoscope className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/src/assets/icono-completo.png" 
+              alt="Logo de la Plataforma de Presupuestos" 
+              className="w-50 h-50 object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Dental Chart Builder
+            Plataforma de Presupuestos
           </h1>
           <p className="text-gray-600">
-            Sistema de gestión dental
+            Sistema de gestión de presupuestos dentales
           </p>
         </div>
 
@@ -158,7 +162,7 @@ const Login = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2024 Dental Chart Builder. Todos los derechos reservados.
+            © 2024 Plataforma de Presupuestos. Todos los derechos reservados.
           </p>
         </div>
       </div>

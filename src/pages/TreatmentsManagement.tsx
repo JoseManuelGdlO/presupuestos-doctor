@@ -43,11 +43,13 @@ import {
   Eye, 
   EyeOff,
   ArrowLeft,
-  DollarSign
+  DollarSign,
+  Building2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Treatment, TreatmentFormData, TreatmentFilters } from "@/types/treatment";
 import TreatmentForm from "@/components/TreatmentForm";
+import { CompanyEditForm } from "@/components/CompanyEditForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTreatments } from "@/hooks/useTreatments";
 
@@ -85,6 +87,7 @@ const TreatmentsManagement = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCompanyEdit, setShowCompanyEdit] = useState(false);
 
   // Filtrar tratamientos cuando cambien los filtros
   useEffect(() => {
@@ -251,35 +254,45 @@ const TreatmentsManagement = () => {
             </div>
           </div>
           
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-dental-pink hover:bg-dental-pink/90"
-                disabled={!user?.companyId}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Tratamiento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingTreatment ? "Editar Tratamiento" : "Nuevo Tratamiento"}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingTreatment 
-                    ? "Modifica los datos del tratamiento seleccionado"
-                    : "Agrega un nuevo tratamiento al sistema"
-                  }
-                </DialogDescription>
-              </DialogHeader>
-              <TreatmentForm
-                onSubmit={editingTreatment ? handleEditTreatment : handleAddTreatment}
-                initialData={editingTreatment}
-                predefinedColors={PREDEFINED_COLORS}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCompanyEdit(true)}
+              disabled={!user?.companyId}
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Editar Empresa
+            </Button>
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-dental-pink hover:bg-dental-pink/90"
+                  disabled={!user?.companyId}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Tratamiento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingTreatment ? "Editar Tratamiento" : "Nuevo Tratamiento"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingTreatment 
+                      ? "Modifica los datos del tratamiento seleccionado"
+                      : "Agrega un nuevo tratamiento al sistema"
+                    }
+                  </DialogDescription>
+                </DialogHeader>
+                <TreatmentForm
+                  onSubmit={editingTreatment ? handleEditTreatment : handleAddTreatment}
+                  initialData={editingTreatment}
+                  predefinedColors={PREDEFINED_COLORS}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -510,6 +523,11 @@ const TreatmentsManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de edición de empresa */}
+      {showCompanyEdit && (
+        <CompanyEditForm onClose={() => setShowCompanyEdit(false)} />
+      )}
     </div>
   );
 };

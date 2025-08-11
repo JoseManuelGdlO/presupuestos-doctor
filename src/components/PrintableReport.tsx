@@ -72,7 +72,7 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
         <p>Fecha: {new Date(patientData.date).toLocaleDateString('es-MX')}</p>
       </div>
 
-      {/* Imágenes dentales */}
+      {/* Imágenes del paciente */}
       {images.length > 0 && (
         <div className="mb-6">
           <div className="grid grid-cols-2 gap-4">
@@ -80,7 +80,7 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
               <div key={index} className="border border-gray-300">
                 <img 
                   src={image} 
-                  alt={`Imagen dental ${index + 1}`}
+                  alt={`Imagen del paciente ${index + 1}`}
                   className="w-full h-48 object-cover"
                 />
               </div>

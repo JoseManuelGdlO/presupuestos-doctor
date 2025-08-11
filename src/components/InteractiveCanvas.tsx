@@ -12,6 +12,7 @@ interface Treatment {
   y: number;
   color: string;
   name: string;
+  imageIndex?: number; // Índice de la imagen actual
 }
 
 interface InteractiveCanvasProps {
@@ -20,6 +21,9 @@ interface InteractiveCanvasProps {
   selectedTreatment: string | null;
   onTreatmentAdded: (treatment: Treatment) => void;
   onClearTreatments: () => void;
+  onCanvasUpdate?: (canvasDataUrl: string) => void;
+  imageIndex?: number; // Índice de la imagen actual
+  existingTreatments?: Treatment[]; // Tratamientos existentes para esta imagen
 }
 
 export const InteractiveCanvas = ({ 
@@ -27,12 +31,89 @@ export const InteractiveCanvas = ({
   selectedColor, 
   selectedTreatment,
   onTreatmentAdded,
-  onClearTreatments 
+  onClearTreatments,
+  onCanvasUpdate,
+  imageIndex = 0,
+  existingTreatments = []
 }: InteractiveCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
-  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [treatments, setTreatments] = useState<Treatment[]>(existingTreatments);
   const [selectedObject, setSelectedObject] = useState<any>(null);
+
+  // Function to export canvas with treatments
+  const exportCanvas = useCallback(() => {
+    if (!fabricCanvas) return null;
+    return fabricCanvas.toDataURL({
+      format: 'png',
+      quality: 1,
+      multiplier: 1
+    });
+  }, [fabricCanvas]);
+
+  // Update parent component when canvas changes
+  useEffect(() => {
+    if (onCanvasUpdate && fabricCanvas) {
+      const dataUrl = exportCanvas();
+      if (dataUrl) {
+        onCanvasUpdate(dataUrl);
+      }
+    }
+  }, [treatments, fabricCanvas, onCanvasUpdate, exportCanvas]);
+
+  // Update canvas when treatments are cleared externally
+  useEffect(() => {
+    if (fabricCanvas && treatments.length === 0) {
+      // Clear all treatment objects from canvas
+      fabricCanvas.getObjects().forEach(obj => {
+        if (obj.get('treatmentId')) {
+          fabricCanvas.remove(obj);
+        }
+      });
+      fabricCanvas.renderAll();
+      
+      // Update parent with empty canvas
+      if (onCanvasUpdate) {
+        const dataUrl = exportCanvas();
+        if (dataUrl) {
+          onCanvasUpdate(dataUrl);
+        }
+      }
+    }
+  }, [treatments.length, fabricCanvas, onCanvasUpdate, exportCanvas]);
+
+  // Load existing treatments when canvas is ready
+  useEffect(() => {
+    if (fabricCanvas && existingTreatments.length > 0) {
+      // Clear existing objects first
+      fabricCanvas.getObjects().forEach(obj => {
+        if (obj.get('treatmentId')) {
+          fabricCanvas.remove(obj);
+        }
+      });
+
+      // Add existing treatments to canvas
+      existingTreatments.forEach(treatment => {
+        const star = new Circle({
+          left: treatment.x - 8,
+          top: treatment.y - 8,
+          fill: treatment.color,
+          radius: 8,
+          stroke: '#ffffff',
+          strokeWidth: 2,
+          selectable: true,
+        });
+
+        star.set('treatmentId', treatment.id);
+        star.set('treatmentName', treatment.name);
+
+        fabricCanvas.add(star);
+      });
+
+      fabricCanvas.renderAll();
+      setTreatments(existingTreatments);
+    }
+  }, [fabricCanvas, existingTreatments]);
 
   const handleCanvasClick = useCallback((options: any) => {
     console.log("Canvas clicked - selectedColor:", selectedColor, "selectedTreatment:", selectedTreatment);
@@ -77,13 +158,14 @@ export const InteractiveCanvas = ({
       x: pointer.x,
       y: pointer.y,
       color: selectedColor,
-      name: selectedTreatment
+      name: selectedTreatment,
+      imageIndex: imageIndex // Agregar el índice de imagen
     };
     
     setTreatments(prev => [...prev, newTreatment]);
     onTreatmentAdded(newTreatment);
     toast.success(`${selectedTreatment} agregado`);
-  }, [selectedColor, selectedTreatment, fabricCanvas, onTreatmentAdded]);
+  }, [selectedColor, selectedTreatment, fabricCanvas, onTreatmentAdded, imageIndex]);
 
   const deleteSelectedObject = useCallback(() => {
     if (!fabricCanvas || !selectedObject) return;
@@ -96,9 +178,8 @@ export const InteractiveCanvas = ({
       // Remove from treatments state
       setTreatments(prev => prev.filter(t => t.id !== treatmentId));
       
-      // Update parent state
+      // Update parent state by calling onClearTreatments and re-adding remaining treatments
       const updatedTreatments = treatments.filter(t => t.id !== treatmentId);
-      // We need to sync with parent by calling onClearTreatments and re-adding remaining treatments
       onClearTreatments();
       updatedTreatments.forEach(treatment => onTreatmentAdded(treatment));
       
@@ -211,9 +292,9 @@ export const InteractiveCanvas = ({
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="bg-dental-soft">
-        <CardTitle className="text-lg font-bold text-center text-dental-pink">
-          Diagnóstico Visual
-        </CardTitle>
+                    <CardTitle className="text-lg font-bold text-center text-dental-pink">
+              Presupuesto Visual
+            </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="space-y-4">

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DentalHeader } from "@/components/DentalHeader";
 import { PatientForm } from "@/components/PatientForm";
-import { ImageUploader } from "@/components/ImageUploader";
+import { MultipleImageUploader } from "@/components/MultipleImageUploader";
 import { ColorSelector } from "@/components/ColorSelector";
 import { InteractiveCanvas } from "@/components/InteractiveCanvas";
 import { TreatmentSummary } from "@/components/TreatmentSummary";
+import { SessionsConfig } from "@/components/SessionsConfig";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft, Settings } from "lucide-react";
 
@@ -22,6 +23,7 @@ interface Treatment {
   y: number;
   color: string;
   name: string;
+  imageIndex: number; // Agregar índice de imagen para identificar a qué imagen pertenece
 }
 
 const Index = () => {
@@ -32,7 +34,10 @@ const Index = () => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedTreatment, setSelectedTreatment] = useState<string | null>(null);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [treatmentsByImage, setTreatmentsByImage] = useState<Record<number, Treatment[]>>({}); // Tratamientos por imagen
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [canvasImages, setCanvasImages] = useState<string[]>([]); // Array de imágenes de canvas
+  const [totalSessions, setTotalSessions] = useState<number>(0); // Número de sesiones configuradas
 
   const handlePatientSubmit = (data: PatientData) => {
     setPatientData(data);
@@ -41,6 +46,42 @@ const Index = () => {
 
   const handleImagesUploaded = (images: string[]) => {
     setUploadedImages(images);
+    
+    // Si se eliminaron imágenes, limpiar los tratamientos asociados
+    if (images.length < uploadedImages.length) {
+      // Limpiar tratamientos de imágenes que ya no existen
+      const newTreatmentsByImage: Record<number, Treatment[]> = {};
+      Object.keys(treatmentsByImage).forEach(key => {
+        const imageIndex = parseInt(key);
+        if (imageIndex < images.length) {
+          newTreatmentsByImage[imageIndex] = treatmentsByImage[imageIndex];
+        }
+      });
+      setTreatmentsByImage(newTreatmentsByImage);
+      
+      // Actualizar lista general de tratamientos
+      const remainingTreatments = treatments.filter(treatment => 
+        treatment.imageIndex < images.length
+      );
+      setTreatments(remainingTreatments);
+      
+      // Ajustar índices de imagen si es necesario
+      if (currentImageIndex >= images.length) {
+        setCurrentImageIndex(Math.max(0, images.length - 1));
+      }
+    }
+    
+    // Actualizar canvas images
+    setCanvasImages(prev => {
+      const newCanvasImages = new Array(images.length).fill(null);
+      prev.forEach((canvasImage, index) => {
+        if (index < images.length) {
+          newCanvasImages[index] = canvasImage;
+        }
+      });
+      return newCanvasImages;
+    });
+    
     if (images.length > 0) {
       setCurrentStep(3);
     }
@@ -54,11 +95,37 @@ const Index = () => {
   };
 
   const handleTreatmentAdded = (treatment: Treatment) => {
+    // Agregar tratamiento a la imagen actual
+    setTreatmentsByImage(prev => ({
+      ...prev,
+      [currentImageIndex]: [...(prev[currentImageIndex] || []), treatment]
+    }));
+    
+    // Actualizar lista general de tratamientos
     setTreatments(prev => [...prev, treatment]);
   };
 
   const handleClearTreatments = () => {
-    setTreatments([]);
+    // Limpiar tratamientos de la imagen actual
+    setTreatmentsByImage(prev => ({
+      ...prev,
+      [currentImageIndex]: []
+    }));
+    
+    // Actualizar lista general de tratamientos
+    setTreatments(prev => prev.filter(t => t.imageIndex !== currentImageIndex));
+  };
+
+  const handleCanvasUpdate = (canvasDataUrl: string) => {
+    setCanvasImages(prev => {
+      const newCanvasImages = [...prev];
+      newCanvasImages[currentImageIndex] = canvasDataUrl;
+      return newCanvasImages;
+    });
+  };
+
+  const handleSessionsConfigured = (sessions: number) => {
+    setTotalSessions(sessions);
   };
 
   const nextImage = () => {
@@ -72,6 +139,28 @@ const Index = () => {
       setCurrentImageIndex(currentImageIndex - 1);
     }
   };
+
+  // Obtener tratamientos de la imagen actual
+  const currentImageTreatments = treatmentsByImage[currentImageIndex] || [];
+
+  // Calcular el total del tratamiento
+  const treatmentTotals = treatments.reduce((acc, treatment) => {
+    const existing = acc.find(item => item.name === treatment.name);
+    if (existing) {
+      existing.count++;
+      existing.total += existing.unitCost;
+    } else {
+      acc.push({
+        name: treatment.name,
+        count: 1,
+        unitCost: 4300, // Costo por tratamiento
+        total: 4300
+      });
+    }
+    return acc;
+  }, [] as Array<{ name: string; count: number; unitCost: number; total: number }>);
+
+  const grandTotal = treatmentTotals.reduce((sum, item) => sum + item.total, 0);
 
   return (
     <div className="min-h-screen bg-dental-soft">
@@ -125,12 +214,15 @@ const Index = () => {
           {/* Step 2: Image Upload */}
           {currentStep >= 2 && (
             <div className={currentStep === 2 ? "" : "opacity-75"}>
-              <ImageUploader onImagesUploaded={handleImagesUploaded} />
+              <MultipleImageUploader 
+                images={uploadedImages}
+                onImagesUploaded={handleImagesUploaded} 
+              />
             </div>
           )}
 
           {/* Step 3: Diagnosis */}
-          {currentStep >= 3 && uploadedImages.length > 0 && (
+          {currentStep === 3 && uploadedImages.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Color Selector */}
               <div>
@@ -148,6 +240,9 @@ const Index = () => {
                   selectedTreatment={selectedTreatment}
                   onTreatmentAdded={handleTreatmentAdded}
                   onClearTreatments={handleClearTreatments}
+                  onCanvasUpdate={handleCanvasUpdate}
+                  imageIndex={currentImageIndex}
+                  existingTreatments={currentImageTreatments}
                 />
                 
                 {/* Image Navigation */}
@@ -179,13 +274,51 @@ const Index = () => {
               {/* Treatment Summary (spanning full width on smaller screens) */}
               <div className="lg:col-span-1">
                 {patientData && (
-                  <TreatmentSummary
-                    treatments={treatments}
-                    patientData={patientData}
-                    images={uploadedImages}
-                  />
+                  <div className="space-y-4">
+                    <TreatmentSummary
+                      treatments={treatments}
+                      patientData={patientData}
+                      images={uploadedImages}
+                      canvasImage={canvasImages[currentImageIndex]}
+                      canvasImages={canvasImages}
+                    />
+                    
+                    {/* Botón para configurar sesiones */}
+                    {treatments.length > 0 && (
+                      <Button
+                        onClick={() => setCurrentStep(4)}
+                        className="w-full bg-dental-pink hover:bg-dental-pink/90"
+                      >
+                        Configurar Sesiones
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Step 4: Sessions Configuration */}
+          {currentStep === 4 && (
+            <SessionsConfig
+              grandTotal={grandTotal}
+              onSessionsConfigured={handleSessionsConfigured}
+              onNext={() => setCurrentStep(5)}
+              onBack={() => setCurrentStep(3)}
+            />
+          )}
+
+          {/* Step 5: Treatment Summary */}
+          {currentStep === 5 && patientData && (
+            <div className="max-w-4xl mx-auto">
+              <TreatmentSummary
+                treatments={treatments}
+                patientData={patientData}
+                images={uploadedImages}
+                canvasImage={canvasImages[currentImageIndex]}
+                canvasImages={canvasImages}
+                totalSessions={totalSessions}
+              />
             </div>
           )}
         </div>

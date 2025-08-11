@@ -128,8 +128,8 @@ export const DentalHeader = () => {
           
           <div className="flex items-center gap-4 flex-shrink-0 ml-4">
             <div className="text-right">
-              <p className="text-sm text-white/80">Sistema de Diagnóstico Digital</p>
-              <p className="text-lg font-semibold">Planeamiento de Tratamiento</p>
+              <p className="text-sm text-white/80">Plataforma de Presupuestos</p>
+              <p className="text-lg font-semibold">Gestión de Tratamientos</p>
             </div>
 
             <LogoutButton />

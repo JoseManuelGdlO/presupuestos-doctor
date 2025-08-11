@@ -34,9 +34,9 @@ export const getCompanies = async (): Promise<Company[]> => {
 };
 
 // Obtener empresa por ID
-export const getCompanyById = async (companyId: string): Promise<Company | null> => {
+export const getCompanyById = async (id: string): Promise<Company | null> => {
   try {
-    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    const companyDoc = await getDoc(doc(db, 'companies', id));
     if (companyDoc.exists()) {
       const data = companyDoc.data();
       return {
@@ -48,8 +48,69 @@ export const getCompanyById = async (companyId: string): Promise<Company | null>
     }
     return null;
   } catch (error) {
-    console.error('Error getting company:', error);
+    console.error('Error getting company by ID:', error);
     throw error;
+  }
+};
+
+// Obtener información del doctor desde la empresa
+export const getDoctorInfo = async (companyId: string) => {
+  try {
+    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    if (companyDoc.exists()) {
+      const data = companyDoc.data();
+      return {
+        name: data.doctorName || 'Yomaira García Flores',
+        specialty: data.doctorSpecialty || 'Especialista en Odontopediatría',
+        certifications: data.doctorCertifications || [
+          'Certificado por Colegio Mexicano de Odontología Pediátrica',
+          'Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298',
+          'Formación en psicología infantil - C.E.T.A.P Puebla'
+        ],
+        initials: data.doctorInitials || 'YG'
+      };
+    }
+    // Valores por defecto si no se encuentra la empresa
+    return {
+      name: 'Yomaira García Flores',
+      specialty: 'Especialista en Odontopediatría',
+      certifications: [
+        'Certificado por Colegio Mexicano de Odontología Pediátrica',
+        'Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298',
+        'Formación en psicología infantil - C.E.T.A.P Puebla'
+      ],
+      initials: 'YG'
+    };
+  } catch (error) {
+    console.error('Error getting doctor info:', error);
+    // Valores por defecto en caso de error
+    return {
+      name: 'Yomaira García Flores',
+      specialty: 'Especialista en Odontopediatría',
+      certifications: [
+        'Certificado por Colegio Mexicano de Odontología Pediátrica',
+        'Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298',
+        'Formación en psicología infantil - C.E.T.A.P Puebla'
+      ],
+      initials: 'YG'
+    };
+  }
+};
+
+// Obtener observaciones importantes desde la empresa
+export const getImportantObservations = async (companyId: string) => {
+  try {
+    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    if (companyDoc.exists()) {
+      const data = companyDoc.data();
+      return data.importantObservations || 'Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.';
+    }
+    // Valor por defecto si no se encuentra la empresa
+    return 'Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.';
+  } catch (error) {
+    console.error('Error getting important observations:', error);
+    // Valor por defecto en caso de error
+    return 'Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.';
   }
 };
 
@@ -79,9 +140,9 @@ export const createCompany = async (companyData: CompanyFormData): Promise<Compa
 };
 
 // Actualizar empresa
-export const updateCompany = async (companyId: string, companyData: Partial<CompanyFormData>): Promise<void> => {
+export const updateCompany = async (id: string, companyData: Partial<CompanyFormData>): Promise<void> => {
   try {
-    const companyRef = doc(db, 'companies', companyId);
+    const companyRef = doc(db, 'companies', id);
     await updateDoc(companyRef, {
       ...companyData,
       updatedAt: Timestamp.now(),
@@ -92,10 +153,14 @@ export const updateCompany = async (companyId: string, companyData: Partial<Comp
   }
 };
 
-// Eliminar empresa
-export const deleteCompany = async (companyId: string): Promise<void> => {
+// Eliminar empresa (eliminación lógica)
+export const deleteCompany = async (id: string): Promise<void> => {
   try {
-    await deleteDoc(doc(db, 'companies', companyId));
+    const companyRef = doc(db, 'companies', id);
+    await updateDoc(companyRef, {
+      isActive: false,
+      updatedAt: Timestamp.now(),
+    });
   } catch (error) {
     console.error('Error deleting company:', error);
     throw error;
