@@ -9,6 +9,8 @@ import { TreatmentSummary } from "@/components/TreatmentSummary";
 import { SessionsConfig } from "@/components/SessionsConfig";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft, Settings } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTreatments } from "@/hooks/useTreatments";
 
 interface PatientData {
   name: string;
@@ -28,6 +30,8 @@ interface Treatment {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { getTreatmentCost } = useTreatments(user?.companyId || undefined);
   const [currentStep, setCurrentStep] = useState(1);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -143,18 +147,19 @@ const Index = () => {
   // Obtener tratamientos de la imagen actual
   const currentImageTreatments = treatmentsByImage[currentImageIndex] || [];
 
-  // Calcular el total del tratamiento
+  // Calcular el total del tratamiento usando los costos reales
   const treatmentTotals = treatments.reduce((acc, treatment) => {
     const existing = acc.find(item => item.name === treatment.name);
     if (existing) {
       existing.count++;
       existing.total += existing.unitCost;
     } else {
+      const treatmentCost = getTreatmentCost(treatment.name);
       acc.push({
         name: treatment.name,
         count: 1,
-        unitCost: 4300, // Costo por tratamiento
-        total: 4300
+        unitCost: treatmentCost,
+        total: treatmentCost
       });
     }
     return acc;

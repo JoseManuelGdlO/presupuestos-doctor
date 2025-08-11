@@ -69,7 +69,7 @@ export const SessionsConfig = ({
               <h3 className="text-lg font-semibold text-gray-900">Total del Tratamiento</h3>
             </div>
             <div className="text-3xl font-bold text-blue-600">
-              ${grandTotal.toLocaleString('es-MX')}.00
+              ${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
             <p className="text-sm text-gray-600 mt-1">
               Monto total a distribuir entre las sesiones
@@ -99,7 +99,7 @@ export const SessionsConfig = ({
                     {suggestedSessions}
                   </div>
                   <div className="text-sm text-gray-600">
-                    ${(grandTotal / suggestedSessions).toLocaleString('es-MX')}.00 por sesión
+                    ${(grandTotal / suggestedSessions).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} por sesión
                   </div>
                 </CardContent>
               </Card>
@@ -122,7 +122,7 @@ export const SessionsConfig = ({
                     3
                   </div>
                   <div className="text-sm text-gray-600">
-                    ${(grandTotal / 3).toLocaleString('es-MX')}.00 por sesión
+                    ${(grandTotal / 3).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} por sesión
                   </div>
                 </CardContent>
               </Card>
@@ -145,7 +145,7 @@ export const SessionsConfig = ({
                     6
                   </div>
                   <div className="text-sm text-gray-600">
-                    ${(grandTotal / 6).toLocaleString('es-MX')}.00 por sesión
+                    ${(grandTotal / 6).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} por sesión
                   </div>
                 </CardContent>
               </Card>
@@ -171,7 +171,7 @@ export const SessionsConfig = ({
                   <Label>Monto por sesión</Label>
                   <div className="mt-1 p-3 bg-gray-50 rounded-md border">
                     <span className="text-lg font-semibold text-gray-900">
-                      ${(grandTotal / customSessions).toLocaleString('es-MX')}.00
+                      ${(grandTotal / customSessions).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
                   </div>
                 </div>
@@ -201,13 +201,13 @@ export const SessionsConfig = ({
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
-                  ${sessionAmount.toLocaleString('es-MX')}.00
+                  ${sessionAmount.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
                 <div className="text-sm text-gray-600">Por sesión</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  ${grandTotal.toLocaleString('es-MX')}.00
+                  ${grandTotal.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
                 <div className="text-sm text-gray-600">Total</div>
               </div>
