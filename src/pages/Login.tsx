@@ -56,7 +56,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <img 
-              src="/src/assets/icono-completo.png" 
+              src="/icono-completo.png" 
               alt="Logo de la Plataforma de Presupuestos" 
               className="w-50 h-50 object-contain"
             />
