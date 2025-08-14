@@ -17,6 +17,7 @@ interface PatientData {
   age: string;
   date: string;
   notes: string;
+  xrayImages: string[];
 }
 
 interface Treatment {
@@ -44,6 +45,8 @@ const Index = () => {
   const [totalSessions, setTotalSessions] = useState<number>(0); // Número de sesiones configuradas
 
   const handlePatientSubmit = (data: PatientData) => {
+    console.log('Datos del paciente recibidos:', data);
+    console.log('xrayImages en handlePatientSubmit:', data.xrayImages);
     setPatientData(data);
     setCurrentStep(2);
   };
@@ -233,6 +236,7 @@ const Index = () => {
               <div>
                 <ColorSelector
                   selectedColor={selectedColor}
+                  selectedTreatment={selectedTreatment}
                   onColorSelect={handleColorSelect}
                 />
               </div>

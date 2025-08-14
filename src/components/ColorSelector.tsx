@@ -7,10 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface ColorSelectorProps {
   selectedColor: string | null;
+  selectedTreatment: string | null;
   onColorSelect: (color: string, name: string) => void;
 }
 
-export const ColorSelector = ({ selectedColor, onColorSelect }: ColorSelectorProps) => {
+export const ColorSelector = ({ selectedColor, selectedTreatment, onColorSelect }: ColorSelectorProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getActiveTreatments } = useTreatments(user?.companyId || undefined);
@@ -50,14 +51,14 @@ export const ColorSelector = ({ selectedColor, onColorSelect }: ColorSelectorPro
             {treatments.map((treatment) => (
               <Button
                 key={treatment.id}
-                variant={selectedColor === treatment.color ? "default" : "outline"}
+                variant={selectedTreatment === treatment.name ? "default" : "outline"}
                 className={`w-full justify-start text-left h-auto py-3 px-4 ${
-                  selectedColor === treatment.color 
+                  selectedTreatment === treatment.name 
                     ? `${treatment.bgClass} text-white hover:opacity-90` 
                     : "hover:bg-dental-soft border-dental-pink/20"
                 }`}
                 onClick={() => {
-                  console.log("Color selected:", treatment.color, treatment.name);
+                  console.log("Treatment selected:", treatment.color, treatment.name);
                   onColorSelect(treatment.color, treatment.name);
                 }}
               >
@@ -78,7 +79,7 @@ export const ColorSelector = ({ selectedColor, onColorSelect }: ColorSelectorPro
           </div>
         )}
         
-        {selectedColor && (
+        {selectedTreatment && (
           <div className="mt-4 p-3 bg-dental-light rounded-lg">
             <p className="text-sm text-center text-dental-pink font-medium">
               Haz clic en la imagen para marcar el diente

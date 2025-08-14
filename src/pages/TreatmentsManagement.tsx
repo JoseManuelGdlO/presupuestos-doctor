@@ -63,6 +63,14 @@ const PREDEFINED_COLORS = [
   { name: "Púrpura", value: "#9333EA", bgClass: "bg-purple-500" },
   { name: "Rosa", value: "#EC4899", bgClass: "bg-pink-500" },
   { name: "Cian", value: "#06B6D4", bgClass: "bg-cyan-500" },
+  { name: "Marrón", value: "#A16207", bgClass: "bg-amber-700" },
+  { name: "Gris", value: "#6B7280", bgClass: "bg-gray-500" },
+  { name: "Verde Azulado", value: "#0D9488", bgClass: "bg-teal-600" },
+  { name: "Violeta", value: "#7C3AED", bgClass: "bg-violet-600" },
+  { name: "Indigo", value: "#4F46E5", bgClass: "bg-indigo-600" },
+  { name: "Verde Lima", value: "#84CC16", bgClass: "bg-lime-500" },
+  { name: "Azul Marino", value: "#1E40AF", bgClass: "bg-blue-800" },
+  { name: "Rojo Oscuro", value: "#991B1B", bgClass: "bg-red-800" },
 ];
 
 const TreatmentsManagement = () => {

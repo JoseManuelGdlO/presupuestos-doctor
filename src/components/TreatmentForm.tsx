@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Treatment, TreatmentFormData } from "@/types/treatment";
 
 const treatmentSchema = z.object({
@@ -35,6 +38,20 @@ interface TreatmentFormProps {
 }
 
 const TreatmentForm = ({ onSubmit, initialData, predefinedColors }: TreatmentFormProps) => {
+  const [useCustomColor, setUseCustomColor] = useState(false);
+  const [customColor, setCustomColor] = useState(initialData?.color || "#000000");
+  
+  // Detectar si el color inicial es personalizado (no está en la lista predefinida)
+  useEffect(() => {
+    if (initialData?.color) {
+      const isPredefined = predefinedColors.some(color => color.value === initialData.color);
+      if (!isPredefined) {
+        setUseCustomColor(true);
+        setCustomColor(initialData.color);
+      }
+    }
+  }, [initialData, predefinedColors]);
+  
   const form = useForm<z.infer<typeof treatmentSchema>>({
     resolver: zodResolver(treatmentSchema),
     defaultValues: {
@@ -46,7 +63,12 @@ const TreatmentForm = ({ onSubmit, initialData, predefinedColors }: TreatmentFor
   });
 
   const handleSubmit = (data: z.infer<typeof treatmentSchema>) => {
-    onSubmit(data);
+    // Si se está usando color personalizado, usar ese valor
+    const finalData = {
+      ...data,
+      color: useCustomColor ? customColor : data.color
+    };
+    onSubmit(finalData);
   };
 
   return (
@@ -77,26 +99,67 @@ const TreatmentForm = ({ onSubmit, initialData, predefinedColors }: TreatmentFor
           render={({ field }) => (
             <FormItem>
               <FormLabel>Color *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un color" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {predefinedColors.map((color) => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className={`w-4 h-4 rounded-full ${color.bgClass}`}
-                          style={{ backgroundColor: color.value }}
-                        />
-                        <span>{color.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              
+              {/* Toggle para color personalizado */}
+              <div className="flex items-center space-x-2 mb-3">
+                <Switch
+                  id="custom-color"
+                  checked={useCustomColor}
+                  onCheckedChange={setUseCustomColor}
+                />
+                <Label htmlFor="custom-color" className="text-sm">
+                  Usar color personalizado
+                </Label>
+              </div>
+
+              {useCustomColor ? (
+                /* Color personalizado */
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-8 h-8 rounded-full border-2 border-gray-300"
+                      style={{ backgroundColor: customColor }}
+                    />
+                    <Input
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="w-16 h-10 p-1 border rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      placeholder="#000000"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Selecciona un color personalizado para el tratamiento
+                  </p>
+                </div>
+              ) : (
+                /* Colores predefinidos */
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un color" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {predefinedColors.map((color) => (
+                      <SelectItem key={color.value} value={color.value}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className={`w-4 h-4 rounded-full ${color.bgClass}`}
+                            style={{ backgroundColor: color.value }}
+                          />
+                          <span>{color.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}

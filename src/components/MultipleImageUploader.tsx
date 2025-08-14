@@ -10,6 +10,9 @@ interface MultipleImageUploaderProps {
   maxImages?: number;
   maxSize?: number; // en MB
   className?: string;
+  title?: string;
+  description?: string;
+  placeholder?: string;
 }
 
 export const MultipleImageUploader = ({
@@ -17,7 +20,10 @@ export const MultipleImageUploader = ({
   onImagesUploaded,
   maxImages = 10,
   maxSize = 5, // 5MB por defecto
-  className = ""
+  className = "",
+  title = "Imágenes del Paciente",
+  description = "Arrastra y suelta las imágenes aquí o haz clic para seleccionar",
+  placeholder = "Subir Imágenes del Paciente"
 }: MultipleImageUploaderProps) => {
   const [uploadedImages, setUploadedImages] = useState<string[]>(images);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -128,7 +134,7 @@ export const MultipleImageUploader = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Imágenes del Paciente</h3>
+        <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm text-gray-500">
           {uploadedImages.length}/{maxImages} imágenes
         </p>
@@ -163,10 +169,10 @@ export const MultipleImageUploader = ({
               </div>
               <div>
                 <p className="text-lg font-medium text-gray-900 mb-2">
-                  {isLoading ? "Procesando imágenes..." : "Subir Imágenes del Paciente"}
+                  {isLoading ? "Procesando imágenes..." : placeholder}
                 </p>
                 <p className="text-sm text-gray-600 mb-4">
-                  Arrastra y suelta las imágenes aquí o haz clic para seleccionar
+                  {description}
                 </p>
                 <p className="text-xs text-gray-500">
                   PNG, JPG, GIF hasta {maxSize}MB cada una

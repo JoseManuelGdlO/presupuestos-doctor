@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MultipleImageUploader } from "@/components/MultipleImageUploader";
 
 interface PatientData {
   name: string;
   age: string;
   date: string;
   notes: string;
+  xrayImages: string[];
 }
 
 interface PatientFormProps {
@@ -21,7 +23,8 @@ export const PatientForm = ({ onSubmit }: PatientFormProps) => {
     name: "",
     age: "",
     date: new Date().toISOString().split('T')[0],
-    notes: ""
+    notes: "",
+    xrayImages: []
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,6 +34,11 @@ export const PatientForm = ({ onSubmit }: PatientFormProps) => {
 
   const handleChange = (field: keyof PatientData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleXrayImagesChange = (images: string[]) => {
+    console.log('Imágenes de rayos X actualizadas:', images);
+    setFormData(prev => ({ ...prev, xrayImages: images }));
   };
 
   return (
@@ -84,6 +92,19 @@ export const PatientForm = ({ onSubmit }: PatientFormProps) => {
               onChange={(e) => handleChange("notes", e.target.value)}
               placeholder="Observaciones, alergias, etc."
               rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Imágenes de Rayos X (Opcional)</Label>
+            <MultipleImageUploader
+              images={formData.xrayImages}
+              onImagesUploaded={handleXrayImagesChange}
+              maxImages={5}
+              maxSize={5}
+              title="Imágenes de Rayos X"
+              placeholder="Subir imágenes de rayos X"
+              description="Arrastra o haz clic para subir imágenes de rayos X"
             />
           </div>
           

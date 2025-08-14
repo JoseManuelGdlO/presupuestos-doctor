@@ -17,6 +17,7 @@ interface PatientData {
   age: string;
   date: string;
   notes: string;
+  xrayImages: string[];
 }
 
 interface TreatmentSummaryProps {
@@ -119,12 +120,16 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
       return;
     }
 
+    // Debug: Verificar si los datos de rayos X están llegando
+    console.log('PatientData en generatePDF:', patientData);
+    console.log('xrayImages:', patientData.xrayImages);
+    console.log('xrayImages length:', patientData.xrayImages?.length);
+    
     const reportWindow = window.open('', '_blank');
     if (!reportWindow) {
       toast.error("No se pudo abrir la ventana del reporte");
       return;
     }
-    debugger;
 
     // Filtrar imágenes de canvas que no sean null
     const validCanvasImages = canvasImages.filter(img => img !== null);
@@ -152,6 +157,11 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
               .h-56 { height: 14rem; }
               .object-contain { object-fit: contain; }
               .object-cover { object-fit: cover; }
+              .color-indicator { 
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
             }
             body {
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -176,13 +186,20 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
             .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
             .table-header { background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%); }
             .treatment-badge { 
-              display: inline-flex; 
-              align-items: center; 
-              padding: 0.25rem 0.75rem; 
-              border-radius: 9999px; 
-              font-size: 0.75rem; 
-              font-weight: 500; 
-              margin: 0.125rem;
+              display: inline-block; 
+              width: 16px; 
+              height: 16px; 
+              border-radius: 50%; 
+              margin-right: 8px;
+              border: 2px solid #000;
+            }
+            .color-indicator {
+              display: inline-block;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              margin-right: 8px;
+              border: 2px solid #000;
             }
           </style>
         </head>
@@ -294,6 +311,8 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
             </div>
             ` : ''}
 
+
+
             <!-- Treatment table -->
             <div class="p-6">
               <div class="mb-4">
@@ -315,7 +334,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                       <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
                         <td class="p-3 border-b border-gray-100">
                           <div class="flex items-center gap-2">
-                            <span class="treatment-badge" style="background-color: ${treatments.find(t => t.name === item.name)?.color || '#000'}; color: white;">&nbsp;</span>
+                            <div class="color-indicator" style="background-color: ${treatments.find(t => t.name === item.name)?.color || '#000'} !important;"></div>
                             <span class="font-medium text-gray-900 text-sm">${item.name}</span>
                           </div>
                         </td>
@@ -370,6 +389,33 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                     <p class="text-blue-800 text-sm">${patientData.notes}</p>
                   </div>
                 </div>
+              ` : ''}
+              
+              <!-- Rayos X -->
+              ${(() => {
+                console.log('Evaluando condición de rayos X:', {
+                  hasXrayImages: !!patientData.xrayImages,
+                  xrayImagesLength: patientData.xrayImages?.length,
+                  condition: patientData.xrayImages && patientData.xrayImages.length > 0
+                });
+                return patientData.xrayImages && patientData.xrayImages.length > 0;
+              })() ? `
+              <div class="mt-4 bg-white p-4 rounded-lg card-shadow">
+                <h3 class="text-base font-semibold text-gray-900 mb-2">Rayos X</h3>
+                <p class="text-sm text-gray-600 mb-3">Evidencia radiológica del paciente</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  ${patientData.xrayImages.slice(0, 4).map((xrayImage, index) => `
+                    <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                      <div class="bg-blue-100 p-2 text-center">
+                        <span class="text-blue-700 font-semibold text-xs">Rayos X ${index + 1}</span>
+                      </div>
+                      <div class="p-1">
+                        <img src="${xrayImage}" alt="Rayos X ${index + 1}" class="w-full h-48 object-contain rounded"/>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
               ` : ''}
             </div>
 
