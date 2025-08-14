@@ -55,19 +55,17 @@ interface CompanyEditFormProps {
 
 export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshCompanyData } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tempCertifications, setTempCertifications] = useState<string[]>([]);
   const [tempLicenses, setTempLicenses] = useState<string[]>([]);
   const [tempAdditionalTraining, setTempAdditionalTraining] = useState<string[]>([]);
   const [tempRecommendations, setTempRecommendations] = useState<string[]>([]);
-  const [tempDoctorCertifications, setTempDoctorCertifications] = useState<string[]>([]);
   const [newCertification, setNewCertification] = useState("");
   const [newLicense, setNewLicense] = useState("");
   const [newTraining, setNewTraining] = useState("");
   const [newRecommendation, setNewRecommendation] = useState("");
-  const [newDoctorCertification, setNewDoctorCertification] = useState("");
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
@@ -130,7 +128,6 @@ export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
           setTempLicenses(company.licenses || []);
           setTempAdditionalTraining(company.additionalTraining || []);
           setTempRecommendations(company.recommendations || []);
-          setTempDoctorCertifications(company.doctorCertifications || []);
         }
       } catch (error) {
         console.error('Error loading company:', error);
@@ -166,10 +163,13 @@ export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
         licenses: tempLicenses,
         additionalTraining: tempAdditionalTraining,
         recommendations: tempRecommendations,
-        doctorCertifications: tempDoctorCertifications,
       };
 
       await updateCompany(user.companyId, companyData);
+      
+      // Actualizar la información de la empresa en el contexto
+      await refreshCompanyData();
+      
       toast({
         title: "Empresa actualizada",
         description: "Los datos de la empresa han sido actualizados exitosamente.",
@@ -191,7 +191,6 @@ export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
     setTempLicenses([]);
     setTempAdditionalTraining([]);
     setTempRecommendations([]);
-    setTempDoctorCertifications([]);
   };
 
   const addCertification = () => {
@@ -238,16 +237,7 @@ export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
     setTempRecommendations(tempRecommendations.filter((_, i) => i !== index));
   };
 
-  const addDoctorCertification = () => {
-    if (newDoctorCertification.trim()) {
-      setTempDoctorCertifications([...tempDoctorCertifications, newDoctorCertification.trim()]);
-      setNewDoctorCertification("");
-    }
-  };
 
-  const removeDoctorCertification = (index: number) => {
-    setTempDoctorCertifications(tempDoctorCertifications.filter((_, i) => i !== index));
-  };
 
   if (loading) {
     return (
@@ -525,89 +515,7 @@ export const CompanyEditForm = ({ onClose }: CompanyEditFormProps) => {
                   </div>
                 </div>
 
-                {/* Información del Doctor (PDF) */}
-                <div className="border-b pb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Información del Doctor (PDF)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="doctorName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nombre del Doctor</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Nombre completo del doctor" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="doctorSpecialty"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Especialidad</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Especialidad del doctor" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="doctorInitials"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Iniciales</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Iniciales" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="importantObservations"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Observaciones Importantes</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} placeholder="Observaciones importantes que aparecerán en el PDF" rows={3} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="md:col-span-2">
-                      <Label>Certificaciones del Doctor</Label>
-                      <div className="flex gap-2 mt-2">
-                        <Input
-                          value={newDoctorCertification}
-                          onChange={(e) => setNewDoctorCertification(e.target.value)}
-                          placeholder="Nueva certificación"
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDoctorCertification())}
-                        />
-                        <Button type="button" onClick={addDoctorCertification} variant="outline">
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {tempDoctorCertifications.map((cert, index) => (
-                          <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeDoctorCertification(index)}>
-                            {cert} ×
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Botones de acción */}
                 <div className="flex justify-end gap-4">

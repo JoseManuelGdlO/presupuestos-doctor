@@ -17,6 +17,7 @@ interface PrintableReportProps {
   treatments: Treatment[];
   patientData: PatientData;
   images: string[];
+  companyData?: any;
 }
 
 const TREATMENT_COSTS = {
@@ -27,7 +28,7 @@ const TREATMENT_COSTS = {
   "Resina permanente": 1200,
 };
 
-export const PrintableReport = ({ treatments, patientData, images }: PrintableReportProps) => {
+export const PrintableReport = ({ treatments, patientData, images, companyData }: PrintableReportProps) => {
   // Calculate treatment counts and totals
   const treatmentCounts = treatments.reduce((acc, treatment) => {
     acc[treatment.name] = (acc[treatment.name] || 0) + 1;
@@ -50,15 +51,21 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
       <div className="border-2 border-black p-4 mb-6">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-16 h-16 bg-dental-pink rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">YG</span>
+            <span className="text-white font-bold text-xl">{companyData?.doctorInitials || 'YG'}</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dental-pink">Yomaira García Flores</h1>
-            <p className="text-sm text-gray-600">Especialista en odontopediatría</p>
+            <h1 className="text-xl font-bold text-dental-pink">{companyData?.doctorName || 'Yomaira García Flores'}</h1>
+            <p className="text-sm text-gray-600">{companyData?.doctorSpecialty || 'Especialista en odontopediatría'}</p>
             <p className="text-xs text-blue-600">
-              Certificado por Colegio Mexicano de Odontología Pediátrica<br/>
-              Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298<br/>
-              Formación en psicología infantil - C.E.T.A.P Puebla
+              {companyData?.doctorCertifications?.map((cert: string, index: number) => (
+                <span key={index}>{cert}<br/></span>
+              )) || (
+                <>
+                  Certificado por Colegio Mexicano de Odontología Pediátrica<br/>
+                  Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298<br/>
+                  Formación en psicología infantil - C.E.T.A.P Puebla
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -68,7 +75,7 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
       <div className="mb-6">
         <p className="font-semibold">Paciente: {patientData.name}</p>
         <p>Edad: {patientData.age} años</p>
-        <p>Doctora: Yomaira García Flores</p>
+        <p>Doctora: {companyData?.doctorName || 'Yomaira García Flores'}</p>
         <p>Fecha: {new Date(patientData.date).toLocaleDateString('es-MX')}</p>
       </div>
 
@@ -125,8 +132,7 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
         <p><strong>{totalSessions} sesiones de ${(grandTotal / totalSessions).toLocaleString('es-MX')}.00</strong></p>
         
         <p>
-          Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el 
-          presupuesto se pueden ver modificados.
+          {companyData?.importantObservations || 'Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.'}
         </p>
         
         {patientData.notes && (
@@ -141,8 +147,8 @@ export const PrintableReport = ({ treatments, patientData, images }: PrintableRe
       <div className="mt-8 pt-4 border-t border-gray-300">
         <div className="text-center">
           <div className="border-b border-black w-64 mx-auto mb-2"></div>
-          <p className="text-sm">Dra. Yomaira García Flores</p>
-          <p className="text-xs text-gray-600">Especialista en Odontopediatría</p>
+          <p className="text-sm">Dra. {companyData?.doctorName || 'Yomaira García Flores'}</p>
+          <p className="text-xs text-gray-600">{companyData?.doctorSpecialty || 'Especialista en Odontopediatría'}</p>
         </div>
       </div>
     </div>

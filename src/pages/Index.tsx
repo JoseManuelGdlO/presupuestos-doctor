@@ -30,7 +30,7 @@ interface Treatment {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, company } = useAuth();
   const { getTreatmentCost } = useTreatments(user?.companyId || undefined);
   const [currentStep, setCurrentStep] = useState(1);
   const [patientData, setPatientData] = useState<PatientData | null>(null);

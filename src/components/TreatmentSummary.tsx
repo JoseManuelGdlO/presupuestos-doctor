@@ -34,11 +34,10 @@ import { getDoctorInfo, getImportantObservations, getCompanyById } from "@/servi
 import { useState, useEffect } from "react";
 
 export const TreatmentSummary = ({ treatments, patientData, images = [], canvasImage, canvasImages = [], totalSessions }: TreatmentSummaryProps) => {
-  const { user } = useAuth();
+  const { user, company } = useAuth();
   const { getTreatmentCost } = useTreatments(user?.companyId || undefined);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
   const [importantObservations, setImportantObservations] = useState<string>('');
-  const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   // Group treatments by type and count them
@@ -69,15 +68,29 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
       }
 
       try {
-        const [doctorData, observations, companyData] = await Promise.all([
-          getDoctorInfo(user.companyId),
-          getImportantObservations(user.companyId),
-          getCompanyById(user.companyId)
-        ]);
-        
-        setDoctorInfo(doctorData);
-        setImportantObservations(observations);
-        setCompany(companyData);
+        // Si tenemos la información de la empresa en el contexto, usarla
+        if (company) {
+          setDoctorInfo({
+            name: company.doctorName || 'Yomaira García Flores',
+            specialty: company.doctorSpecialty || 'Especialista en Odontopediatría',
+            certifications: company.doctorCertifications || [
+              'Certificado por Colegio Mexicano de Odontología Pediátrica',
+              'Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298',
+              'Formación en psicología infantil - C.E.T.A.P Puebla'
+            ],
+            initials: company.doctorInitials || 'YG'
+          });
+          setImportantObservations(company.importantObservations || 'Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.');
+        } else {
+          // Si no tenemos la información en el contexto, cargarla desde el servicio
+          const [doctorData, observations] = await Promise.all([
+            getDoctorInfo(user.companyId),
+            getImportantObservations(user.companyId)
+          ]);
+          
+          setDoctorInfo(doctorData);
+          setImportantObservations(observations);
+        }
       } catch (error) {
         console.error('Error loading doctor info:', error);
         // Usar valores por defecto en caso de error
@@ -92,14 +105,13 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
           initials: 'YG'
         });
         setImportantObservations('Hay que considerar que entre más avance el tiempo el daño avanza y tanto el tratamiento como el presupuesto se pueden ver modificados.');
-        setCompany(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadDoctorInfo();
-  }, [user?.companyId]);
+  }, [user?.companyId, company]);
 
   const generateReport = () => {
     if (loading) {
@@ -112,6 +124,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
       toast.error("No se pudo abrir la ventana del reporte");
       return;
     }
+    debugger;
 
     // Filtrar imágenes de canvas que no sean null
     const validCanvasImages = canvasImages.filter(img => img !== null);
@@ -134,6 +147,9 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
               .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
               .gap-3 { gap: 0.75rem; }
               .h-32 { height: 8rem; }
+              .h-40 { height: 10rem; }
+              .h-48 { height: 12rem; }
+              .h-56 { height: 14rem; }
               .object-contain { object-fit: contain; }
               .object-cover { object-fit: cover; }
             }
@@ -151,6 +167,9 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
             .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
             .gap-3 { gap: 0.75rem; }
             .h-32 { height: 8rem; }
+            .h-40 { height: 10rem; }
+            .h-48 { height: 12rem; }
+            .h-56 { height: 14rem; }
             .object-contain { object-fit: contain; }
             .object-cover { object-fit: cover; }
             .header-gradient { background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); }
@@ -178,19 +197,29 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                   </div>
                 ` : `
                   <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <span class="text-white font-bold text-3xl">${doctorInfo?.initials || 'YG'}</span>
+                    <span class="text-white font-bold text-3xl">${company?.ownerName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'YG'}</span>
                   </div>
                 `}
                 <div class="flex-1">
-                  <h1 class="text-2xl font-bold mb-1">${doctorInfo?.name || 'Yomaira García Flores'}</h1>
-                  <p class="text-base text-white/90 mb-1">${doctorInfo?.specialty || 'Especialista en Odontopediatría'}</p>
+                  <h1 class="text-2xl font-bold mb-1">${company?.doctorName || 'Yomaira García Flores'}</h1>
+                  <p class="text-base text-white/90 mb-1">${company?.specialty || 'Especialista en Odontopediatría'}</p>
                   <div class="text-xs text-white/80 space-y-0.5">
-                    ${doctorInfo?.certifications?.map((cert: string) => `<p>${cert}</p>`).join('') || `
-                      <p>Certificado por Colegio Mexicano de Odontología Pediátrica</p>
-                      <p>Cédula licenciatura UAEI 9834567 - Cédula especialidad UAT 10584298</p>
-                      <p>Formación en psicología infantil - C.E.T.A.P Puebla</p>
-                    `}
+                    ${company?.certifications?.map((cert: string) => `<p>${cert}</p>`).join('') || ''}
+                    ${company?.additionalTraining?.map((training: string) => `<p>${training}</p>`).join('') || ''}
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección de Cédulas Profesionales -->
+            ${company?.licenses && company.licenses.length > 0 ? `
+            <div class="p-4 bg-white/10 border-t border-white/20">
+              <h3 class="text-sm font-semibold text-white/90 mb-2">Cédulas Profesionales</h3>
+              <div class="text-xs text-white/80 space-y-0.5">
+                ${company.licenses.map((license: string) => `<p>${license}</p>`).join('')}
+              </div>
+            </div>
+            ` : ''}
                 </div>
               </div>
             </div>
@@ -208,7 +237,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                 </div>
                 <div class="bg-white p-3 rounded-lg card-shadow">
                   <p class="text-xs text-gray-500 font-medium mb-1">DOCTORA</p>
-                  <p class="text-base font-semibold text-gray-900">${doctorInfo?.name || 'Yomaira García Flores'}</p>
+                  <p class="text-base font-semibold text-gray-900">${company?.ownerName || 'Yomaira García Flores'}</p>
                 </div>
                 <div class="bg-white p-3 rounded-lg card-shadow">
                   <p class="text-xs text-gray-500 font-medium mb-1">FECHA</p>
@@ -235,7 +264,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                       <span class="text-white font-semibold text-xs">Imagen ${index + 1}</span>
                     </div>
                     <div class="p-1">
-                      <img src="${canvasImg}" alt="Presupuesto con tratamientos marcados - Imagen ${index + 1}" class="w-full h-28 object-contain rounded"/>
+                      <img src="${canvasImg}" alt="Presupuesto con tratamientos marcados - Imagen ${index + 1}" class="w-full h-56 object-contain rounded"/>
                     </div>
                   </div>
                 `).join('')}
@@ -257,7 +286,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                       <span class="text-gray-700 font-semibold text-xs">Imagen ${index + 1}</span>
                     </div>
                     <div class="p-1">
-                      <img src="${image}" alt="Imagen del paciente ${index + 1}" class="w-full h-28 object-cover rounded"/>
+                      <img src="${image}" alt="Imagen del paciente ${index + 1}" class="w-full h-56 object-cover rounded"/>
                     </div>
                   </div>
                 `).join('')}
@@ -328,7 +357,7 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
                   <h3 class="text-base font-semibold text-gray-900 mb-2">Observaciones Importantes</h3>
                   <div class="bg-amber-50 p-3 rounded-lg border-l-4 border-amber-400">
                     <p class="text-amber-800 text-xs">
-                      ${importantObservations}
+                      ${company?.recommendations?.join('. ') || importantObservations}
                     </p>
                   </div>
                 </div>
@@ -348,8 +377,8 @@ export const TreatmentSummary = ({ treatments, patientData, images = [], canvasI
             <div class="p-6 bg-white">
               <div class="text-center">
                 <div class="border-b-2 border-dental-pink w-48 mx-auto mb-3"></div>
-                <p class="text-base font-semibold text-gray-900">Dra. ${doctorInfo?.name || 'Yomaira García Flores'}</p>
-                <p class="text-sm text-gray-600">${doctorInfo?.specialty || 'Especialista en Odontopediatría'}</p>
+                <p class="text-base font-semibold text-gray-900">Dra. ${company?.ownerName || 'Yomaira García Flores'}</p>
+                <p class="text-sm text-gray-600">${company?.specialty || 'Especialista en Odontopediatría'}</p>
                 <p class="text-xs text-gray-500 mt-1">Este documento es válido por 30 días</p>
               </div>
             </div>

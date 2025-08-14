@@ -18,6 +18,7 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   company: any | null;
+  refreshCompanyData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -209,6 +210,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }));
   };
 
+  const refreshCompanyData = async () => {
+    if (!authState.user?.companyId) {
+      setCompany(null);
+      return;
+    }
+
+    try {
+      const companyData = await getCompanyById(authState.user.companyId);
+      console.log('Company data refreshed:', companyData);
+      setCompany(companyData);
+    } catch (error) {
+      console.error('Error refreshing company data:', error);
+      setCompany(null);
+    }
+  };
+
   const value: AuthContextType = {
     ...authState,
     login,
@@ -216,6 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     updateUser,
     company,
+    refreshCompanyData,
   };
 
   return (
